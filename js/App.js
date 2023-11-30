@@ -2,22 +2,23 @@ import EasyHTTP from './EasyHTTP.js';
 import BootswatchSelector from './BootswatchSelector.js';
 class CalorieTracker {
     constructor() {
+        this._storage = new Storage();
         this._init()
     }
     // public methods / API
     async addMeal(meal) {
         this._meals.push(meal);
         this._totalCalories += meal.calories;
-        await Storage.updateTotalCalories(this._totalCalories);
-        await Storage.storeMeal(meal);
+        await this._storage.updateTotalCalories(this._totalCalories);
+        await this._storage.storeMeal(meal);
         this._displayNewMeal(meal);
         this._render();
     }
     async addWorkout(workout) {
         this._workouts.push(workout);
         this._totalCalories -= workout.calories;
-        await Storage.updateTotalCalories(this._totalCalories);
-        await Storage.storeWorkout(workout);
+        await this._storage.updateTotalCalories(this._totalCalories);
+        await this._storage.storeWorkout(workout);
         this._displayNewWorkout(workout);
         this._render();
     }
@@ -27,9 +28,9 @@ class CalorieTracker {
         if(index !== -1) {
             const meal = this._meals[index];
             this._totalCalories -= meal.calories;
-            await Storage.updateTotalCalories(this._totalCalories);
+            await this._storage.updateTotalCalories(this._totalCalories);
             this._meals.splice(index, 1);
-            await Storage.deleteMeal(id);
+            await this._storage.deleteMeal(id);
             this._render();
         }
     }
@@ -39,9 +40,9 @@ class CalorieTracker {
         if(index !== -1) {
             const workout = this._workouts[index];
             this._totalCalories -= workout.calories;
-            await Storage.updateTotalCalories(this._totalCalories);
+            await this._storage.updateTotalCalories(this._totalCalories);
             this._workouts.splice(index, 1);
-            await Storage.deleteWorkout(id);
+            await this._storage.deleteWorkout(id);
             this._render();
         }
     }
@@ -49,12 +50,12 @@ class CalorieTracker {
         // this._totalCalories = 0;
         // this._meals = [];
         // this._workouts = [];
-        await Storage.clear();
+        await this._storage.clear();
         this._render();
     }
     async setLimit(calorieLimit) {
         this._calorieLimit = calorieLimit;
-        await Storage.setCalorieLimit(calorieLimit);
+        await this._storage.setCalorieLimit(calorieLimit);
         this._displayCalorieLimit();
         this._render();
     }
@@ -80,10 +81,10 @@ class CalorieTracker {
         document.querySelector('#limit').value = this._calorieLimit;
     }
     async _getData() {
-        this._calorieLimit = await Storage.getCalorieLimit();
-        this._totalCalories = await Storage.getTotalCalories(0);
-        this._meals = await Storage.getMeals();
-        this._workouts = await Storage.getWorkouts();
+        this._calorieLimit = await this._storage.getCalorieLimit();
+        this._totalCalories = await this._storage.getTotalCalories(0);
+        this._meals = await this._storage.getMeals();
+        this._workouts = await this._storage.getWorkouts();
         return {calorieLimit: this._calorieLimit, totalCalories: this._totalCalories, meals: this._meals, workouts: this._workouts}
     }
     _displayTotalCalories() {
@@ -196,7 +197,7 @@ class Workout {
     }
 }
 class Storage {
-    static async getCalorieLimit() {
+    async getCalorieLimit() {
         try {
             const response = await EasyHTTP.get('http://localhost:3000/calorieLimit');
             return response.calories;
@@ -205,14 +206,14 @@ class Storage {
             return 2000;
         }
     }
-    static async setCalorieLimit(calorieLimit) {
+    async setCalorieLimit(calorieLimit) {
         try {
             await EasyHTTP.put('http://localhost:3000/calorieLimit', {calories: calorieLimit});
         } catch(error) {
             console.error('Error setting calorie limit:', error);
         }
     }
-    static async getTotalCalories() {
+    async getTotalCalories() {
         try {
             const response = await EasyHTTP.get('http://localhost:3000/totalCalories');
             return response.calories;
@@ -221,14 +222,14 @@ class Storage {
             return 0;
         }
     }
-    static async updateTotalCalories(calories) {
+    async updateTotalCalories(calories) {
         try {
             await EasyHTTP.put('http://localhost:3000/totalCalories', { calories: calories });
         } catch(error) {
             console.error('Error updating total calories:', error);
         }
     }
-    static async getMeals() {
+    async getMeals() {
         try {
             const response = await EasyHTTP.get('http://localhost:3000/meals');
             return response;
@@ -237,21 +238,21 @@ class Storage {
             return [];
         }
     }
-    static async storeMeal(meal) {
+    async storeMeal(meal) {
         try {
             await EasyHTTP.post('http://localhost:3000/meals', meal);
         } catch(error) {
             console.error('Error storing meal:', error);
         }
     }
-    static async deleteMeal(id) {
+    async deleteMeal(id) {
         try {
             await EasyHTTP.delete(`http://localhost:3000/meals/${id}`);
         } catch(error) {
             console.error('Error deleting meal:', error);
         }
     }
-    static async getWorkouts() {
+    async getWorkouts() {
         try {
             const response = await EasyHTTP.get('http://localhost:3000/workouts');
             return response;
@@ -260,21 +261,21 @@ class Storage {
             return [];
         }
     }
-    static async storeWorkout(workout) {
+    async storeWorkout(workout) {
         try {
             await EasyHTTP.post('http://localhost:3000/workouts', workout);
         } catch(error) {
             console.error('Error storing workout:', error);
         }
     }
-    static async deleteWorkout(id) {
+    async deleteWorkout(id) {
         try {
             await EasyHTTP.delete(`http://localhost:3000/workouts/${id}`);
         } catch(error) {
             console.error('Error deleting workout:', error);
         }
     }
-    static async clear() {
+    async clear() {
         const calorieLimit = {calories: 2000};
         const totalCalories = {calories: 0};
         const meals = [];
@@ -304,6 +305,7 @@ class Storage {
 class App {
     constructor() {
         BootswatchSelector.init('united');
+        this._storage = new Storage();
         this._tracker = new CalorieTracker();
         this._loadEventListeners();
         this._tracker.loadItems();
