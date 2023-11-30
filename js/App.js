@@ -23,7 +23,6 @@ class CalorieTracker {
         this._render();
     }
     async removeMeal(id) {
-        console.log('Removing meal with id:', id)
         const index = this._meals.findIndex(meal => meal.id === id);
         if(index !== -1) {
             const meal = this._meals[index];
@@ -35,7 +34,6 @@ class CalorieTracker {
         }
     }
     async removeWorkout(id) {
-        console.log('Removing workout with id', id)
         const index = this._workouts.findIndex(workout => workout.id === id);
         if(index !== -1) {
             const workout = this._workouts[index];
@@ -47,9 +45,6 @@ class CalorieTracker {
         }
     }
     async reset() {
-        // this._totalCalories = 0;
-        // this._meals = [];
-        // this._workouts = [];
         await this._storage.clear();
         this._render();
     }
@@ -126,26 +121,23 @@ class CalorieTracker {
         const caloriesProgressElement = document.querySelector('#calorie-progress');
         const percentage = this._totalCalories / this._calorieLimit * 100;
         const width = Math.min(percentage, 100);
-        caloriesProgressElement.computedStyleMap.width = `${width}%`
+        caloriesProgressElement.style.width = `${width}%`
     }
     _displayNewMeal(meal) {
         const mealsElement = document.querySelector('#meal-items');
         const mealElement = document.createElement('div');
         mealElement.classList.add('card', 'my-2');
         mealElement.setAttribute('data-id', meal.id);
-        console.log('New meal ID:', meal.id);
         mealElement.innerHTML = `
-            <div class="card my-2">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <h4 class="mx-1">${meal.name}</h4>
-                        <div class="fs-1 bg-primary text-white text-center rounded-2 px-2 px-sm-5">
-                            ${meal.calories}
-                        </div>
-                        <button class="delete btn btn-danger btn-sm mx-2">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h4 class="mx-1">${meal.name}</h4>
+                    <div class="fs-1 bg-primary text-white text-center rounded-2 px-2 px-sm-5">
+                        ${meal.calories}
                     </div>
+                    <button class="delete btn btn-danger btn-sm mx-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
             </div>
         `;
@@ -156,19 +148,16 @@ class CalorieTracker {
         const workoutElement = document.createElement('div');
         workoutElement.classList.add('card', 'my-2');
         workoutElement.setAttribute('data-id', workout.id);
-        console.log('New workout ID:', workout.id);
         workoutElement.innerHTML = `
-            <div class="card my-2">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <h4 class="mx-1">${workout.name}</h4>
-                        <div class="fs-1 bg-secondary text-white text-center rounded-2 px-2 px-sm-5">
-                            ${workout.calories}
-                        </div>
-                        <button class="delete btn btn-danger btn-sm mx-2">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h4 class="mx-1">${workout.name}</h4>
+                    <div class="fs-1 bg-secondary text-white text-center rounded-2 px-2 px-sm-5">
+                        ${workout.calories}
                     </div>
+                    <button class="delete btn btn-danger btn-sm mx-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
             </div>
         `;
@@ -184,14 +173,14 @@ class CalorieTracker {
 }
 class Meal {
     constructor(name, calories) {
-        // this.id = Math.random().toString(16).slice(2);
+        this.id = Math.random().toString(16).slice(2);
         this.name = name;
         this.calories = calories;
     }
 }
 class Workout {
     constructor(name, calories) {
-        // this.id = Math.random().toString(16).slice(2);
+        this.id = Math.random().toString(16).slice(2);
         this.name = name;
         this.calories = calories;
     }
@@ -276,30 +265,12 @@ class Storage {
         }
     }
     async clear() {
-        const calorieLimit = {calories: 2000};
-        const totalCalories = {calories: 0};
-        const meals = [];
-        const workouts = [];
-        try {
-            await EasyHTTP.put('http://localhost:3000/calorieLimit', calorieLimit);
-        } catch(error) {
-            console.error('Error resetting calorie limit:', error);
-        }
-        try {
-            await EasyHTTP.put('http://localhost:3000/totalCalories', totalCalories);
-        } catch(error) {
-            console.error('Error resetting total calories', error);
-        }
-        try {
-            await EasyHTTP.put('http://localhost:3000/meals', meals);
-        } catch(error) {
-            console.error('Error clearing meals:', error);
-        }
-        try {
-            await EasyHTTP.put('http://localhost:3000/workouts', workouts);
-        } catch(error) {
-            console.error('Error clearing workouts:', error);
-        }
+        this.setCalorieLimit(2000);
+        this.updateTotalCalories(0);
+        this._meals = await this.getMeals();
+        this._workouts = await this.getWorkouts();
+        this._meals.forEach(meal => this.deleteMeal(meal.id));
+        this._workouts.forEach(workout => this.deleteWorkout(workout.id));
     }
 }
 class App {
@@ -319,7 +290,6 @@ class App {
         document.querySelector('#filter-workouts').addEventListener('keyup', this._filterItems.bind(this, 'workout'));
         document.querySelector('#reset').addEventListener('click', this._reset.bind(this));
         document.querySelector('#limit-form').addEventListener('submit', this._setLimit.bind(this));
-        console.log('Event listeners successfully loaded.');
     }
     _newItem(type, event) {
         event.preventDefault();
