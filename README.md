@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a refactoring of the Tracalorie project from Brad Traversy's 2023 Modern JavaScript from the Beginning Second Edition course. I added a Bootswatch theme selector and also switched from using Local Storage to the JSON-Server NPM package.
+This is a refactoring of the Tracalorie project from Brad Traversy's 2023 Modern JavaScript from the Beginning Second Edition course on O'Reilly. I added a Bootswatch theme selector and also switched from using Local Storage to the JSON-Server NPM package.
 
 ## Note
 
