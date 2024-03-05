@@ -275,7 +275,7 @@ class Storage {
 }
 class App {
     constructor() {
-        BootswatchSelector.init('united')
+        BootswatchSelector('United')
         this._storage = new Storage()
         this._tracker = new CalorieTracker()
         this._loadEventListeners()
