@@ -236,7 +236,7 @@ class Storage {
     }
     async deleteMeal(id) {
         try {
-            await EasyHTTP.delete(`http://localhost:3000/meals/${id}`)
+            await EasyHTTP.del(`http://localhost:3000/meals/${id}`)
         } catch(error) {
             console.error('Error deleting meal:', error)
         }
@@ -259,7 +259,7 @@ class Storage {
     }
     async deleteWorkout(id) {
         try {
-            await EasyHTTP.delete(`http://localhost:3000/workouts/${id}`)
+            await EasyHTTP.del(`http://localhost:3000/workouts/${id}`)
         } catch(error) {
             console.error('Error deleting workout:', error)
         }
